@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>Learn Hebrew!</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #f7f7f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    #game {
+      width: 100%;
+      min-height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 20px env(safe-area-inset-bottom, 16px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-top: env(safe-area-inset-top, 8px);
+    }
+    .level-badge {
+      font-size: 13px;
+      color: #666;
+      background: #f0f0ee;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 0.5px solid #e0e0dc;
+    }
+    .score { font-size: 15px; font-weight: 500; color: #111; }
+
+    .progress-bar {
+      width: 100%;
+      height: 7px;
+      background: #efefed;
+      border-radius: 4px;
+      margin-bottom: 22px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+      background: #1D9E75;
+    }
+
+    .picture-card {
+      width: 100%;
+      background: #f7f7f5;
+      border-radius: 20px;
+      border: 0.5px solid #e8e8e4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px;
+      margin-bottom: 18px;
+    }
+    .picture-emoji { font-size: 100px; line-height: 1; }
+
+    .question-label { font-size: 15px; color: #888; margin-bottom: 6px; text-align: center; }
+    .question-english { font-size: 24px; font-weight: 600; color: #111; text-align: center; margin-bottom: 20px; }
+
+    .options { width: 100%; display: flex; flex-direction: column; gap: 11px; margin-bottom: 18px; }
+    .option-btn {
+      width: 100%;
+      padding: 20px 16px;
+      border-radius: 16px;
+      border: 1.5px solid #e0e0dc;
+      background: #ffffff;
+      font-size: 28px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      direction: rtl;
+      color: #111;
+      transition: transform 0.1s, background 0.15s, border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .option-btn:active { transform: scale(0.97); }
+    .option-btn.correct { background: #E1F5EE; border-color: #1D9E75; color: #085041; }
+    .option-btn.wrong   { background: #FCEBEB; border-color: #E24B4A; color: #501313; }
+    .option-btn.disabled { pointer-events: none; }
+
+    .feedback { font-size: 18px; font-weight: 500; text-align: center; min-height: 28px; margin-bottom: 6px; }
+    .feedback.correct { color: #1D9E75; }
+    .feedback.wrong   { color: #E24B4A; }
+    .transliteration  { font-size: 14px; color: #888; text-align: center; min-height: 20px; margin-bottom: 16px; }
+
+    .next-btn {
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      border: none;
+      background: #1D9E75;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+      -webkit-appearance: none;
+    }
+    .next-btn:active { transform: scale(0.98); }
+
+    .level-select { width: 100%; padding: 16px 0; }
+    .level-select h2 { font-size: 26px; font-weight: 600; text-align: center; margin-bottom: 6px; color: #111; }
+    .level-select p  { font-size: 15px; color: #888; text-align: center; margin-bottom: 28px; }
+    .level-btn {
+      width: 100%;
+      padding: 20px;
+      border-radius: 18px;
+      border: 1.5px solid #e0e0dc;
+      background: #ffffff;
+      margin-bottom: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: left;
+      -webkit-appearance: none;
+    }
+    .level-btn:active { transform: scale(0.98); background: #f7f7f5; }
+    .level-icon  { font-size: 36px; line-height: 1; }
+    .level-title { font-size: 17px; font-weight: 600; color: #111; }
+    .level-desc  { font-size: 13px; color: #888; margin-top: 3px; }
+
+    .end-screen { text-align: center; padding: 40px 0; width: 100%; }
+    .end-stars  { font-size: 64px; margin-bottom: 16px; }
+    .end-title  { font-size: 28px; font-weight: 600; color: #111; margin-bottom: 8px; }
+    .end-score  { font-size: 18px; color: #888; margin-bottom: 32px; }
+    .end-btn {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      border: none;
+      background: #1D9E75;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+      -webkit-appearance: none;
+    }
+    .end-btn.secondary {
+      background: transparent;
+      border: 1.5px solid #e0e0dc;
+      color: #111;
+    }
+
+    @keyframes shake {
+      0%,100%{ transform:translateX(0) }
+      20%    { transform:translateX(-9px) }
+      40%    { transform:translateX(9px) }
+      60%    { transform:translateX(-9px) }
+      80%    { transform:translateX(4px) }
+    }
+    @keyframes pop {
+      0%  { transform:scale(1) }
+      50% { transform:scale(1.07) }
+      100%{ transform:scale(1) }
+    }
+    .shake { animation: shake 0.4s ease; }
+    .pop   { animation: pop 0.3s ease; }
+  </style>
+</head>
+<body>
+<div id="game"></div>
+
+<script>
+const actx = new (window.AudioContext || window.webkitAudioContext)();
+function resumeCtx() { if (actx.state === 'suspended') actx.resume(); }
+
+function playTone(freq, type, start, dur, vol) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.connect(g); g.connect(actx.destination);
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, start);
+  g.gain.linearRampToValueAtTime(vol, start + 0.04);
+  g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+  o.start(start); o.stop(start + dur);
+}
+function playCorrect() {
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+    playTone(f, 'sine', actx.currentTime + i * 0.12, 0.35, 0.28));
+}
+function playWrong() {
+  [220, 180].forEach((f, i) =>
+    playTone(f, 'sawtooth', actx.currentTime + i * 0.18, 0.28, 0.18));
+}
+function playWin() {
+  [523.25, 659.25, 783.99, 659.25, 1046.5].forEach((f, i) =>
+    playTone(f, 'sine', actx.currentTime + i * 0.14, 0.4, 0.25));
+}
+
+const levels = [
+  {
+    name: "Level 1", emoji: "⭐", desc: "Animals & colors — easy!",
+    rounds: [
+      { emoji:"🐱", english:"Cat",       hebrew:"חָתוּל",    trans:"Chatul",    opts:["חָתוּל","כֶּלֶב","פָּרָה"] },
+      { emoji:"🐶", english:"Dog",       hebrew:"כֶּלֶב",    trans:"Kelev",     opts:["חָתוּל","כֶּלֶב","דָּג"] },
+      { emoji:"🐟", english:"Fish",      hebrew:"דָּג",      trans:"Dag",       opts:["דָּג","פָּרָה","חָתוּל"] },
+      { emoji:"🐮", english:"Cow",       hebrew:"פָּרָה",    trans:"Para",      opts:["כֶּלֶב","דָּג","פָּרָה"] },
+      { emoji:"🦁", english:"Lion",      hebrew:"אַרְיֵה",   trans:"Arye",      opts:["אַרְיֵה","כֶּלֶב","פָּרָה"] },
+      { emoji:"🐘", english:"Elephant",  hebrew:"פִּיל",     trans:"Pil",       opts:["דָּג","פִּיל","אַרְיֵה"] },
+      { emoji:"🔴", english:"Red",       hebrew:"אָדוֹם",    trans:"Adom",      opts:["אָדוֹם","כָּחוֹל","יָרוֹק"] },
+      { emoji:"🔵", english:"Blue",      hebrew:"כָּחוֹל",   trans:"Kachol",    opts:["אָדוֹם","כָּחוֹל","צָהוֹב"] },
+      { emoji:"🟡", english:"Yellow",    hebrew:"צָהוֹב",    trans:"Tzahov",    opts:["יָרוֹק","אָדוֹם","צָהוֹב"] },
+      { emoji:"🟢", english:"Green",     hebrew:"יָרוֹק",    trans:"Yarok",     opts:["יָרוֹק","כָּחוֹל","צָהוֹב"] },
+    ]
+  },
+  {
+    name: "Level 2", emoji: "🌟", desc: "Food & home objects",
+    rounds: [
+      { emoji:"🍎", english:"Apple",   hebrew:"תַּפּוּחַ",  trans:"Tapuach",  opts:["תַּפּוּחַ","לֶחֶם","מַיִם"] },
+      { emoji:"🍞", english:"Bread",   hebrew:"לֶחֶם",     trans:"Lechem",   opts:["לֶחֶם","שֻׁלְחָן","תַּפּוּחַ"] },
+      { emoji:"💧", english:"Water",   hebrew:"מַיִם",     trans:"Mayim",    opts:["חָלָב","מַיִם","לֶחֶם"] },
+      { emoji:"🥛", english:"Milk",    hebrew:"חָלָב",     trans:"Chalav",   opts:["תַּפּוּחַ","מַיִם","חָלָב"] },
+      { emoji:"🪑", english:"Chair",   hebrew:"כִּסֵּא",   trans:"Kise",     opts:["כִּסֵּא","שֻׁלְחָן","דֶּלֶת"] },
+      { emoji:"🪟", english:"Window",  hebrew:"חַלּוֹן",   trans:"Chalon",   opts:["דֶּלֶת","חַלּוֹן","כִּסֵּא"] },
+      { emoji:"🚪", english:"Door",    hebrew:"דֶּלֶת",    trans:"Delet",    opts:["חַלּוֹן","שֻׁלְחָן","דֶּלֶת"] },
+      { emoji:"🛏️",english:"Bed",     hebrew:"מִיטָּה",   trans:"Mitta",    opts:["כִּסֵּא","מִיטָּה","שֻׁלְחָן"] },
+      { emoji:"📚", english:"Book",    hebrew:"סֵפֶר",     trans:"Sefer",    opts:["סֵפֶר","עִפָּרוֹן","כִּסֵּא"] },
+      { emoji:"✏️", english:"Pencil",  hebrew:"עִפָּרוֹן", trans:"Iparon",   opts:["סֵפֶר","מִיטָּה","עִפָּרוֹן"] },
+    ]
+  },
+  {
+    name: "Level 3", emoji: "💫", desc: "Actions & harder words",
+    rounds: [
+      { emoji:"🏃",  english:"Running",  hebrew:"רָץ",       trans:"Rats",      opts:["רָץ","אוֹכֵל","יָשֵׁן"] },
+      { emoji:"😴",  english:"Sleeping", hebrew:"יָשֵׁן",    trans:"Yashen",    opts:["שׁוֹתֶה","יָשֵׁן","רָץ"] },
+      { emoji:"🍽️", english:"Eating",   hebrew:"אוֹכֵל",   trans:"Ochel",     opts:["אוֹכֵל","רָץ","לוֹמֵד"] },
+      { emoji:"📖",  english:"Learning", hebrew:"לוֹמֵד",    trans:"Lomed",     opts:["יָשֵׁן","לוֹמֵד","שׁוֹתֶה"] },
+      { emoji:"🥤",  english:"Drinking", hebrew:"שׁוֹתֶה",   trans:"Shote",     opts:["שׁוֹתֶה","רָץ","אוֹכֵל"] },
+      { emoji:"🌳",  english:"Tree",     hebrew:"עֵץ",        trans:"Etz",       opts:["עֵץ","שָׁמַיִם","אֶרֶץ"] },
+      { emoji:"☁️",  english:"Sky",      hebrew:"שָׁמַיִם",  trans:"Shamayim",  opts:["אֶרֶץ","שָׁמַיִם","עֵץ"] },
+      { emoji:"🌍",  english:"Earth",    hebrew:"אֶרֶץ",     trans:"Eretz",     opts:["שָׁמַיִם","עֵץ","אֶרֶץ"] },
+      { emoji:"🏠",  english:"House",    hebrew:"בַּיִת",    trans:"Bayit",     opts:["בַּיִת","מִשְׁפָּחָה","שָׁמַיִם"] },
+      { emoji:"👨‍👩‍👧‍👦", english:"Family", hebrew:"מִשְׁפָּחָה", trans:"Mishpacha", opts:["בַּיִת","אֶרֶץ","מִשְׁפָּחָה"] },
+    ]
+  }
+];
+
+let curLevel = null, curRound = 0, score = 0, answered = false, rounds = [];
+const G = () => document.getElementById('game');
+const shuffle = a => {
+  const b = [...a];
+  for (let i = b.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [b[i], b[j]] = [b[j], b[i]];
+  }
+  return b;
+};
+
+function renderLevelSelect() {
+  G().innerHTML = `
+    <div class="level-select">
+      <div style="font-size:56px;text-align:center;margin-bottom:10px">🇮🇱</div>
+      <h2>Learn Hebrew!</h2>
+      <p>Choose your level to start</p>
+      ${levels.map((l, i) => `
+        <button class="level-btn" onclick="startLevel(${i})">
+          <span class="level-icon">${l.emoji}</span>
+          <div>
+            <div class="level-title">${l.name}</div>
+            <div class="level-desc">${l.desc}</div>
+          </div>
+        </button>`).join('')}
+    </div>`;
+}
+
+function startLevel(idx) {
+  resumeCtx();
+  curLevel = idx; curRound = 0; score = 0;
+  rounds = shuffle(levels[idx].rounds);
+  renderRound();
+}
+
+function renderRound() {
+  const lv = levels[curLevel], r = rounds[curRound], total = rounds.length;
+  const opts = shuffle(r.opts);
+  answered = false;
+  G().innerHTML = `
+    <div class="header">
+      <span class="level-badge">${lv.emoji} ${lv.name}</span>
+      <span class="score">⭐ ${score} / ${total}</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${(curRound / total) * 100}%"></div></div>
+    <div class="picture-card"><div class="picture-emoji">${r.emoji}</div></div>
+    <div class="question-label">What is the Hebrew word for...</div>
+    <div class="question-english">${r.english}</div>
+    <div class="options">
+      ${opts.map(o => `<button class="option-btn" onclick="handleAnswer(this,'${o}','${r.hebrew}')">${o}</button>`).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>
+    <div class="transliteration" id="tr"></div>
+    <button class="next-btn" id="nxt" onclick="nextRound()">${curRound + 1 < total ? 'Next word →' : 'See results!'}</button>`;
+}
+
+function handleAnswer(btn, chosen, correct) {
+  if (answered) return;
+  resumeCtx(); answered = true;
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.add('disabled'));
+  const r = rounds[curRound];
+  if (chosen === correct) {
+    btn.classList.add('correct', 'pop');
+    document.getElementById('fb').textContent = '✓ Correct! Well done!';
+    document.getElementById('fb').className = 'feedback correct';
+    score++; playCorrect();
+  } else {
+    btn.classList.add('wrong', 'shake');
+    document.querySelectorAll('.option-btn').forEach(b => {
+      if (b.textContent.trim() === correct) b.classList.add('correct');
+    });
+    document.getElementById('fb').textContent = '✗ Not quite — the answer is below';
+    document.getElementById('fb').className = 'feedback wrong';
+    playWrong();
+  }
+  document.getElementById('tr').textContent = `${r.hebrew}  (${r.trans})`;
+  document.getElementById('nxt').style.display = 'block';
+}
+
+function nextRound() {
+  curRound++;
+  if (curRound >= rounds.length) renderEnd(); else renderRound();
+}
+
+function renderEnd() {
+  const total = rounds.length, pct = score / total;
+  playWin();
+  G().innerHTML = `
+    <div class="end-screen">
+      <div class="end-stars">${pct >= 0.8 ? '⭐⭐⭐' : pct >= 0.5 ? '⭐⭐' : '⭐'}</div>
+      <div class="end-title">${pct >= 0.8 ? 'Amazing job!' : pct >= 0.5 ? 'Good effort!' : 'Keep practicing!'}</div>
+      <div class="end-score">You got ${score} out of ${total} correct</div>
+      <button class="end-btn" onclick="startLevel(${curLevel})">Play again</button>
+      <button class="end-btn secondary" onclick="renderLevelSelect()">Change level</button>
+    </div>`;
+}
+
+renderLevelSelect();
+</script>
+</body>
+</html>
